@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 
+@available(iOS 10.0, *)
 @objc(CameraStream)
 class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
     var session: AVCaptureSession?
@@ -15,9 +16,10 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         switch cameraString {
         case "back":
-            camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: AVMediaType.video, position: .back)!
+            camera = AVCaptureDevice.defaultDevice(withDeviceType: AVCaptureDeviceType.builtInWideAngleCamera, mediaType: "video", position: .back)!
         default:
-            camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: AVMediaType.video, position: .front)!
+           camera = AVCaptureDevice.defaultDevice(withDeviceType: AVCaptureDeviceType.builtInWideAngleCamera, mediaType: "video", position: .front)!
+
         }
         
         var error: NSError?
@@ -26,7 +28,7 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Setting up session
         session = AVCaptureSession()
-        session?.sessionPreset = AVCaptureSession.Preset.photo
+        session?.sessionPreset = AVCaptureSessionPresetPhoto
         
         do{
             input = try AVCaptureDeviceInput(device: camera)
@@ -57,21 +59,21 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     @objc(pause:)
     func pause(command: CDVInvokedUrlCommand){
-        if session?.isRunning {
+        if session?.isRunning ?? false {
             session?.stopRunning()
         }
     }
     
     @objc(resume:)
     func resume(command: CDVInvokedUrlCommand){
-        if session?.isRunning {
+        if session?.isRunning ?? false {
             return
         }
         session?.startRunning()
     }
     
     
-    func captureOutput(_ output: AVCaptureOutput,  didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    func captureOutput(_ output: AVCaptureOutput,  didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         autoreleasepool{
             let  imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
             // Lock the base address of the pixel buffer
