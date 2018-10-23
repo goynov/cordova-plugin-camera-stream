@@ -1,16 +1,20 @@
+cordova.define("cordova-plugin-camera-stream.CameraStream", function(require, exports, module) {
 var exec = require('cordova/exec');
 
 // Camera: front or back
-exports.startCapture = function (camera) {
-    exec(null, null, 'CameraBaseStream', 'startCapture', [camera]);
+exports.startCapture = function (camera, call2back) {
+               var win = function(data){
+                    call2back(data);
+               };
+               exec(win, null, 'CameraStream', 'startCapture', [camera]);
 };
 
 exports.pause = function () {
-    exec(null, null, 'CameraBaseStream', 'pause', []);
+    exec(null, null, 'CameraStream', 'pause', []);
 };
 
 exports.resume = function () {
-    exec(null, null, 'CameraBaseStream', 'resume', []);
+    exec(null, null, 'CameraStream', 'resume', []);
 };
 
 exports.capture = function(data){
@@ -31,3 +35,4 @@ exports.capture = function(data){
      * cordova.plugins.CameraBase64.startCapture();
      */
 };
+});
