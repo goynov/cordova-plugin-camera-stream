@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elevationsoftware/cordova-plugin-camera-stream.git"
+    "url": "git+https://github.com/goynov/cordova-plugin-camera-stream.git"
   },
   "keywords": [
     "ecosystem:cordova",
