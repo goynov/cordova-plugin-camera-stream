@@ -1,4 +1,3 @@
-cordova.define("cordova-plugin-camera-stream.CameraStream", function(require, exports, module) {
 var exec = require('cordova/exec');
 
 // Camera: front or back
@@ -35,4 +34,3 @@ exports.capture = function(data){
      * cordova.plugins.CameraBase64.startCapture();
      */
 };
-});
