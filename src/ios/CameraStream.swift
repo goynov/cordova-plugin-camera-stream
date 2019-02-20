@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import WebKit
 
 @available(iOS 10.0, *)
 @objc(CameraStream)
@@ -10,9 +11,30 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
     var fi:CLong = 1;
     var fileManager:FileManager?
     var dir:URL?
+    var engine: WKWebView?;
+    var image:NSMutableData?;
     
     @objc(startCapture:)
     func startCapture(command: CDVInvokedUrlCommand) {
+        image = NSMutableData.init();
+        
+        (UIApplication.shared.delegate as! CDVAppDelegate).memoryObjects["camerastream"] = image!;
+        //engine = (self.webView as! WKWebView);
+        //engine?.configuration.allowsInlineMediaPlayback = false;
+        //engine?.reload();
+        //NSLog("asd", (engine?.configuration)!);
+        //(self.webViewEngine as CDVWKWebViewEngine).memoryObjects[0] = image;
+        //self.webViewEngine.engineWebView
+        // re-create WKWebView, since we need to update configuration
+        // remove from keyWindow before recreating
+        //engine?.removeFromSuperview();
+        //let wk:WKWebView = WKWebView.init(frame: (engine?.frame)!, configuration: (engine?.configuration)!);
+        //wk.uiDelegate = engine?.uiDelegate;
+        
+        // add to keyWindow to ensure it is 'active'
+        //[UIApplication.sharedApplication.keyWindow addSubview:self.engineWebView];
+        //UIApplication.shared.keyWindow?.addSubview(wk);
+        
         mainCommand = command;
         fileManager = FileManager.default;
         do{
@@ -103,7 +125,7 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput,  didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         
         self.fi = self.fi+1;
-        if (self.fi % 2 != 0) {return;}
+        if (self.fi % 3 != 0) {return;}
         commandDelegate.run {
             autoreleasepool{
                 let  imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
@@ -138,10 +160,13 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
                 // Create an image object from the Quartz image
                 //let image = UIImage.init(cgImage: quartzImage!)
                 let image = UIImage(cgImage: quartzImage!, scale: 1, orientation: UIImage.Orientation.up);
-                let imageData = image.jpegData(compressionQuality: 0.6);
+                let imageData = image.jpegData(compressionQuality: 1);
                 //let imageData = UIImageJPEGRepresentation(image, 0.3)
                 // Generating a base64 string for cordova's consumption
-                let base64 = imageData?.base64EncodedString(options: Data.Base64EncodingOptions.endLineWithLineFeed)
+                //let base64 = imageData?.base64EncodedString(options: Data.Base64EncodingOptions.endLineWithLineFeed)
+                //self.webViewEngine.memoryObjects[0].
+                self.image?.setData(imageData!);
+                //imageData?.copyBytes(to: self.image!, count: (imageData?.count)!)
                 // Describe the function that is going to be call by the webView frame
                 //let javascript = "cordova.plugins.CameraStream.capture('data:image/jpeg;base64,\(base64!)')"
                 
@@ -154,7 +179,8 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
                 }
                 */
                 
-                let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "data:image/jpeg;base64,\(base64!)");
+                //let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "data:image/jpeg;base64,\(base64!)");
+                let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "ok");
                 //let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: (self.dir?.absoluteString.replacingOccurrences(of: "file:///", with: "http://localhost:8080/_file_/"))! + fname);
                 result?.keepCallback = true;
                 [self.commandDelegate.send(result, callbackId: self.mainCommand?.callbackId)];
