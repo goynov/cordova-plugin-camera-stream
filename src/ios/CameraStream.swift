@@ -91,6 +91,9 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
                 session!.addOutput(videoDataOutput)
                 // lets start some session baby :)
                 session!.startRunning()
+                let conn = videoDataOutput.connection(with: AVMediaType.video);
+                conn?.videoOrientation = .landscapeRight;
+                conn?.isVideoMirrored = cameraString == "front";
             }
         }
     }
