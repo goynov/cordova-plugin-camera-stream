@@ -63,7 +63,11 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Setting up session
         session = AVCaptureSession()
-        session?.sessionPreset = AVCaptureSession.Preset.vga640x480;
+        //session?.sessionPreset = AVCaptureSession.Preset.vga640x480;
+        //session?.sessionPreset = AVCaptureSession.Preset.iFrame960x540;
+        //session?.sessionPreset = AVCaptureSession.Preset.hd1280x720;
+        //session?.sessionPreset = AVCaptureSession.Preset.medium;
+        session?.sessionPreset = AVCaptureSession.Preset.medium;
         
         do{
             input = try AVCaptureDeviceInput(device: camera)
@@ -75,6 +79,12 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         if error == nil && session!.canAddInput(input){
             session!.addInput(input)
+            if let frameSupportRange = camera.activeFormat.videoSupportedFrameRateRanges.first {
+                session!.beginConfiguration()
+                // currentCamera.activeVideoMinFrameDuration = CMTimeMake(1, Int32(frameSupportRange.maxFrameRate))
+                camera.activeVideoMinFrameDuration = CMTimeMake(1, 30)
+                session!.commitConfiguration()
+            }
             videoDataOutput = AVCaptureVideoDataOutput()
             videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as AnyHashable as! String: NSNumber(value: kCVPixelFormatType_32BGRA)]
             videoDataOutput.alwaysDiscardsLateVideoFrames = true
@@ -94,6 +104,7 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
                 let conn = videoDataOutput.connection(with: AVMediaType.video);
                 conn?.videoOrientation = .landscapeRight;
                 conn?.isVideoMirrored = cameraString == "front";
+                
             }
         }
     }
@@ -128,7 +139,7 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput,  didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         
         self.fi = self.fi+1;
-        if (self.fi % 3 != 0) {return;}
+        if (self.fi % 2 != 0) {return;}
         commandDelegate.run {
             autoreleasepool{
                 let  imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
@@ -157,14 +168,18 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
                 let context = CGContext.init(data: baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo)
                 let quartzImage = context?.makeImage()
                 
+                
+                
                 // Unlock the pixel buffer
                 CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags.readOnly)
                 
                 // Create an image object from the Quartz image
                 //let image = UIImage.init(cgImage: quartzImage!)
                 let image = UIImage(cgImage: quartzImage!, scale: 1, orientation: UIImage.Orientation.up);
-                let imageData = image.jpegData(compressionQuality: 1);
-                //let imageData = UIImageJPEGRepresentation(image, 0.3)
+
+                //let imageData = image.jpegData(compressionQuality: 1);
+                let imageData = UIImageJPEGRepresentation(image, 1)
+            
                 // Generating a base64 string for cordova's consumption
                 //let base64 = imageData?.base64EncodedString(options: Data.Base64EncodingOptions.endLineWithLineFeed)
                 //self.webViewEngine.memoryObjects[0].
@@ -207,5 +222,3 @@ class CameraStream: CDVPlugin, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
     }
-
-
